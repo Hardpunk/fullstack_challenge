@@ -2,17 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\DataTables\UserDataTable;
+use App\Http\Controllers\AppBaseController;
 use App\Http\Requests\CreateUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Http\Traits\ConsumesExternalApi;
 use App\Repositories\UserRepository;
-use App\Http\Controllers\AppBaseController;
-use Illuminate\Http\Request;
 use Flash;
-use Response;
 use Hash;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\MessageBag;
+use Response;
 
 class UserController extends AppBaseController
 {
+    use ConsumesExternalApi;
+
     /** @var $userRepository UserRepository */
     private $userRepository;
 
@@ -24,15 +30,12 @@ class UserController extends AppBaseController
     /**
      * Display a listing of the User.
      *
-     * @param Request $request
-     *
+     * @param UserDataTable $userDataTable
      * @return Response
      */
-    public function index(Request $request)
+    public function index(UserDataTable $userDataTable)
     {
-        $users = $this->userRepository->all();
-
-        return view('users.index')->with('users', $users);
+        return $userDataTable->render('users.index');
     }
 
     /**
@@ -61,6 +64,32 @@ class UserController extends AppBaseController
         Flash::success('User saved successfully.');
 
         return redirect(route('users.index'));
+    }
+
+    /**
+     * Register new User from login form.
+     *
+     * @param CreateUserRequest $request
+     *
+     * @return Response
+     */
+    public function register(CreateUserRequest $request)
+    {
+        $input = $request->all();
+        $response = $this->post('/users', $input);
+        $data = $response->getData();
+
+        if (isset($data->errors)) {
+            $errors = (array) $data->errors;
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors($errors);
+        }
+
+        Flash::success('Usuário cadastrado com sucesso.');
+
+        return redirect(route('login'));
     }
 
     /**
@@ -106,7 +135,7 @@ class UserController extends AppBaseController
     /**
      * Update the specified User in storage.
      *
-     * @param int $id
+     * @param  int              $id
      * @param UpdateUserRequest $request
      *
      * @return Response
@@ -137,8 +166,6 @@ class UserController extends AppBaseController
      * Remove the specified User from storage.
      *
      * @param int $id
-     *
-     * @throws \Exception
      *
      * @return Response
      */

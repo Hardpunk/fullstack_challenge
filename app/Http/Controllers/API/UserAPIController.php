@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Http\Request;
 use App\Http\Controllers\AppBaseController;
+use Hash;
 use Response;
 
 /**
@@ -65,7 +66,7 @@ class UserAPIController extends AppBaseController
             $request->get('limit')
         );
 
-        return $this->sendResponse($users->toArray(), 'Users retrieved successfully');
+        return $this->sendResponse($users->toArray(), 'Usuários recuperados com sucesso.');
     }
 
     /**
@@ -109,10 +110,10 @@ class UserAPIController extends AppBaseController
     public function store(CreateUserAPIRequest $request)
     {
         $input = $request->all();
-
+        $input['password'] = Hash::make($input['password']);
         $user = $this->userRepository->create($input);
 
-        return $this->sendResponse($user->toArray(), 'User saved successfully');
+        return $this->sendResponse($user->toArray(), 'Usuário cadastrado com sucesso.');
     }
 
     /**
@@ -159,10 +160,10 @@ class UserAPIController extends AppBaseController
         $user = $this->userRepository->find($id);
 
         if (empty($user)) {
-            return $this->sendError('User not found');
+            return $this->sendError('Usuário não encontrado.');
         }
 
-        return $this->sendResponse($user->toArray(), 'User retrieved successfully');
+        return $this->sendResponse($user->toArray(), 'Usuário recuperado com sucesso.');
     }
 
     /**
@@ -219,12 +220,12 @@ class UserAPIController extends AppBaseController
         $user = $this->userRepository->find($id);
 
         if (empty($user)) {
-            return $this->sendError('User not found');
+            return $this->sendError('Usuário não encontrado.');
         }
 
         $user = $this->userRepository->update($input, $id);
 
-        return $this->sendResponse($user->toArray(), 'User updated successfully');
+        return $this->sendResponse($user->toArray(), 'Usuário atualizado com sucesso.');
     }
 
     /**
@@ -271,11 +272,11 @@ class UserAPIController extends AppBaseController
         $user = $this->userRepository->find($id);
 
         if (empty($user)) {
-            return $this->sendError('User not found');
+            return $this->sendError('Usuário não encontrado.');
         }
 
         $user->delete();
 
-        return $this->sendSuccess('User deleted successfully');
+        return $this->sendSuccess('Usuário excluído com sucesso.');
     }
 }

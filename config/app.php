@@ -80,7 +80,7 @@ return [
     |
      */
 
-    'locale' => env('APP_LOCALE', 'pt_BR'),
+    'locale' => env('APP_LOCALE', 'en'),
 
     /*
     |--------------------------------------------------------------------------
@@ -166,6 +166,8 @@ return [
          * Package Service Providers...
          */
         Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class,
+        Dingo\Api\Provider\LaravelServiceProvider::class,
+        Tymon\JWTAuth\Providers\LaravelServiceProvider::class,
         Spatie\Permission\PermissionServiceProvider::class,
         Yajra\DataTables\DataTablesServiceProvider::class,
         Yajra\DataTables\ButtonsServiceProvider::class,
@@ -234,5 +236,8 @@ return [
         'URL'           => Illuminate\Support\Facades\URL::class,
         'Validator'     => Illuminate\Support\Facades\Validator::class,
         'View'          => Illuminate\Support\Facades\View::class,
+
+        'JWTAuth'       => Tymon\JWTAuth\Facades\JWTAuth::class,
+        'JWTFactory'    => Tymon\JWTAuth\Facades\JWTFactory::class,
     ],
 ];
