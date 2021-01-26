@@ -38,7 +38,13 @@ class RegisterController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('guest');
+        $this->middleware(function ($request, $next) {
+            $requestUri = $request->getRequestUri();
+            if (session()->has('user') && ($requestUri === '/register')) {
+                return redirect(route('index'));
+            }
+            return $next($request);
+        });
     }
 
     /**

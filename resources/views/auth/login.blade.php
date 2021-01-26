@@ -76,12 +76,9 @@
 
                     </div>
 
-                    <div class="row">
+                    <div class="row align-items-center">
                         <div class="col-8">
-                            <div class="icheck-primary">
-                                <input type="checkbox" id="remember">
-                                <label for="remember">{{ __('Remember Me') }}</label>
-                            </div>
+                            <a href="{{ route('register') }}" class="text-center">{{ __('Register') }}</a>
                         </div>
 
                         <div class="col-4">
@@ -90,13 +87,6 @@
 
                     </div>
                 </form>
-
-                <p class="mb-1">
-                    <a href="{{ route('password.request') }}">{{ __('Forgot Your Password?') }}</a>
-                </p>
-                <p class="mb-0">
-                    <a href="{{ route('register') }}" class="text-center">{{ __('Register') }}</a>
-                </p>
 
                 <div class="row">
                     <div class="col-12">

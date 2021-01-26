@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\DataTables\UserDataTable;
 use App\Http\Controllers\AppBaseController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Requests\CreateUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Traits\ConsumesExternalApi;
 use App\Repositories\UserRepository;
+use Carbon\Carbon;
 use Flash;
 use Hash;
 use Illuminate\Http\Request;
@@ -22,9 +24,25 @@ class UserController extends AppBaseController
     /** @var $userRepository UserRepository */
     private $userRepository;
 
+    /** @var object $user */
+    private $user;
+
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
     public function __construct(UserRepository $userRepo)
     {
         $this->userRepository = $userRepo;
+
+        $this->middleware(function($request, $next) {
+            $this->user = (object) session('user');
+            $this->user->created_at = Carbon::parse($this->user->created_at);
+            $this->user->updated_at = Carbon::parse($this->user->updated_at);
+
+            return $next($request);
+        })->except('register');
     }
 
     /**
@@ -35,7 +53,8 @@ class UserController extends AppBaseController
      */
     public function index(UserDataTable $userDataTable)
     {
-        return $userDataTable->render('users.index');
+        $user = $this->user;
+        return $userDataTable->render('users.index', compact('user'));
     }
 
     /**
@@ -45,7 +64,8 @@ class UserController extends AppBaseController
      */
     public function create()
     {
-        return view('users.create');
+        $user = $this->user;
+        return view('users.create', compact('user'));
     }
 
     /**
@@ -87,9 +107,8 @@ class UserController extends AppBaseController
                 ->withErrors($errors);
         }
 
-        Flash::success('Usuário cadastrado com sucesso.');
-
-        return redirect(route('login'));
+        $loginController = new LoginController();
+        return $loginController->login($request);
     }
 
     /**

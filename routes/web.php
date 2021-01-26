@@ -23,9 +23,13 @@ Auth::routes([
     'verify' => false
 ]);
 
-Route::group(['middleware' => 'auth'], function () {
+Route::group(['middleware' => 'jwt.verify'], function () {
     Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('index');
-    Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-    Route::post('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
+    Route::get('/home', [App\Http\Controllers\HomeController::class, 'home'])->name('home');
+    Route::match(['get', 'post'], '/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
     Route::resource('users', App\Http\Controllers\UserController::class);
 });
+
+Route::any('/{param}', function () {
+    return redirect('/');
+})->where('param', '.*');

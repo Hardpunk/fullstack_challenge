@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class HomeController extends Controller
 {
+    /** @var object $user */
+    public $user;
+
     /**
      * Create a new controller instance.
      *
@@ -13,7 +17,13 @@ class HomeController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth');
+        $this->middleware(function($request, $next) {
+            $this->user = (object) session('user');
+            $this->user->created_at = Carbon::parse($this->user->created_at);
+            $this->user->updated_at = Carbon::parse($this->user->updated_at);
+
+            return $next($request);
+        });
     }
 
     /**
@@ -23,6 +33,12 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('home');
+        $user = $this->user;
+        return view('home', compact('user'));
+    }
+
+    public function home()
+    {
+        return redirect(route('index'));
     }
 }

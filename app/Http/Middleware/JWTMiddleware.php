@@ -2,19 +2,18 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Traits\ConsumesExternalApi;
 use Closure;
-use Exception;
+use Flash;
 use Illuminate\Http\Request;
-use JWTAuth;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
-use Tymon\JWTAuth\Exceptions\TokenBlacklistedException;
-use Tymon\JWTAuth\Exceptions\TokenExpiredException;
-use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 use Tymon\JWTAuth\Http\Middleware\BaseMiddleware;
 
 class JWTMiddleware extends BaseMiddleware
 {
+    use ConsumesExternalApi;
+
     /**
      * Handle an incoming request.
      *
@@ -25,30 +24,29 @@ class JWTMiddleware extends BaseMiddleware
     public function handle(Request $request, Closure $next)
     {
         try {
-            $user = JWTAuth::parsetoken()->authenticate();
-
-            if (!$user) {
-                throw new Exception('Usuário não encontrado', Response::HTTP_NOT_FOUND);
+            if (!session()->has('token')) {
+                return redirect(route('login'));
             }
+
+            $authToken = session('token');
+            $this->setToken($authToken);
+            $apiRequest = $this->post('/refresh');
+            $data = $apiRequest->getData();
+
+            if ($apiRequest->getStatusCode() == 200) {
+                session([
+                    'user' => $data->user,
+                    'token' => $data->token,
+                ]);
+            } else {
+                Flash::error($data->message);
+                $request->session()->invalidate();
+                return redirect(route('login'));
+            }
+
         } catch (Throwable $th) {
-            if ($th instanceof TokenExpiredException) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Token Expirou.',
-                ], Response::HTTP_UNAUTHORIZED);
-
-            } else if ($th instanceof TokenInvalidException) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Token inválido',
-                ], Response::HTTP_UNAUTHORIZED);
-
-            } else if ($th instanceof TokenBlacklistedException) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Token banido.',
-                ], Response::HTTP_UNAUTHORIZED);
-            }
+            Flash::error($th->getMessage());
+            return redirect(route('login'));
         }
 
         return $next($request);

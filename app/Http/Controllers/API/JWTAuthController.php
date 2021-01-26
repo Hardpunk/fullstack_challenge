@@ -1,7 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use JWTAuth;
@@ -42,13 +45,19 @@ class JWTAuthController extends Controller
         if (!($jwt_token = JWTAuth::attempt($credentials))) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid E-mail or Password',
+                'message' => 'E-mail ou senha incorreto.',
             ], Response::HTTP_UNAUTHORIZED);
         }
 
         return $this->createNewToken($jwt_token);
     }
 
+    /**
+     * Logout user and invalidate token
+     *
+     * @return JsonResponse
+     * @throws BindingResolutionException
+     */
     public function logout()
     {
         try {
@@ -97,7 +106,6 @@ class JWTAuthController extends Controller
     {
         return response()->json([
             'token' => $token,
-            'token_type' => 'bearer',
             'expires_in' => JWTAuth::factory()->getTTL() * 60,
             'user' => auth()->user(),
         ]);
