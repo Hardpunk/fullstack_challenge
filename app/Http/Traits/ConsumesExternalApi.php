@@ -4,8 +4,10 @@ namespace App\Http\Traits;
 
 use Exception;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\ServerException;
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
@@ -56,14 +58,15 @@ trait ConsumesExternalApi
             $this->initialize();
 
             $requestUrl = $this->baseUri . $requestUrl;
-            $options = [
-                'query' => $queryParams,
-                'json' => $formParams,
-            ];
 
             if (session()->has('token')) {
                 $this->setToken(session('token'));
             }
+
+            $options = [
+                'query' => $queryParams,
+                'json' => $formParams,
+            ];
 
             if (($token = $this->getToken())) {
                 $options['headers'] = [
@@ -72,14 +75,8 @@ trait ConsumesExternalApi
             }
 
             $response = $this->client->$method($requestUrl, $options);
-            // $response = json_decode($request->getBody()->getContents());
-            // $statusCode = $request->getstatusCode();
-            // $headers = $request->getHeaders();
-        } catch (ClientException $ex) {
-            // $response = json_decode($ex->getResponse()->getBody()->getContents());
-            // $statusCode = $ex->getResponse()->getStatusCode();
-            // $headers = $ex->getResponse()->getHeaders();
-            $response = $ex->getResponse();
+        } catch (BadResponseException $bad) {
+            $response = $bad->getResponse();
         } catch (Exception $ex) {
             return response()->json(['message' => $ex->getMessage()]);
         } finally {
@@ -201,5 +198,23 @@ trait ConsumesExternalApi
     public function getToken()
     {
         return $this->token;
+    }
+
+    /**
+     * Refresh token on error exception
+     *
+     * @return void
+     */
+    private function refreshTokenOnError()
+    {
+        $apiRequest = $this->post('/refresh');
+        $data = $apiRequest->getData();
+
+        if ($apiRequest->getStatusCode() == 200) {
+            session([
+                'user' => $data->user,
+                'token' => $data->token,
+            ]);
+        }
     }
 }

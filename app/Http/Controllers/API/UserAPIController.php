@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\AppBaseController;
 use Hash;
 use Response;
+use Validator;
 
 /**
  * Class UserController
@@ -60,11 +61,7 @@ class UserAPIController extends AppBaseController
      */
     public function index(Request $request)
     {
-        $users = $this->userRepository->all(
-            $request->except(['skip', 'limit']),
-            $request->get('skip'),
-            $request->get('limit')
-        );
+        $users = $this->userRepository->all();
 
         return $this->sendResponse($users->toArray(), 'Usuários recuperados com sucesso.');
     }
@@ -212,8 +209,18 @@ class UserAPIController extends AppBaseController
      *      )
      * )
      */
-    public function update($id, UpdateUserAPIRequest $request)
+    public function update($id, Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'. $id],
+            'password' => ['sometimes', 'nullable', 'string', 'min:6', 'confirmed'],
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError($validator->errors()->first());
+        }
+
         $input = $request->all();
 
         /** @var User $user */
@@ -222,6 +229,8 @@ class UserAPIController extends AppBaseController
         if (empty($user)) {
             return $this->sendError('Usuário não encontrado.');
         }
+
+        $input['password'] = Hash::make($input['password']);
 
         $user = $this->userRepository->update($input, $id);
 

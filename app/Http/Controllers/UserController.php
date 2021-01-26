@@ -6,7 +6,6 @@ use App\DataTables\UserDataTable;
 use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Requests\CreateUserRequest;
-use App\Http\Requests\UpdateUserRequest;
 use App\Http\Traits\ConsumesExternalApi;
 use App\Repositories\UserRepository;
 use Carbon\Carbon;
@@ -14,8 +13,8 @@ use Flash;
 use Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\MessageBag;
 use Response;
+use Validator;
 
 class UserController extends AppBaseController
 {
@@ -36,7 +35,7 @@ class UserController extends AppBaseController
     {
         $this->userRepository = $userRepo;
 
-        $this->middleware(function($request, $next) {
+        $this->middleware(function ($request, $next) {
             $this->user = (object) session('user');
             $this->user->created_at = Carbon::parse($this->user->created_at);
             $this->user->updated_at = Carbon::parse($this->user->updated_at);
@@ -54,7 +53,10 @@ class UserController extends AppBaseController
     public function index(UserDataTable $userDataTable)
     {
         $user = $this->user;
-        return $userDataTable->render('users.index', compact('user'));
+        $apiRequest = $this->get('/users');
+        $data = $apiRequest->getData();
+        $users = $data->data;
+        return $userDataTable->render('users.index', compact('user', 'users'));
     }
 
     /**
@@ -140,43 +142,52 @@ class UserController extends AppBaseController
      */
     public function edit($id)
     {
-        $user = $this->userRepository->find($id);
+        $user = $this->user;
+        $apiRequest = $this->get("/users/{$id}");
+        $data = $apiRequest->getData();
 
-        if (empty($user)) {
-            Flash::error('User not found');
-
+        if (!$data->success) {
+            Flash::error($data->message);
             return redirect(route('users.index'));
         }
 
-        return view('users.edit')->with('user', $user);
+        $editUser = $data->data;
+
+        return view('users.edit', compact('user', 'editUser'));
     }
 
     /**
      * Update the specified User in storage.
      *
      * @param  int              $id
-     * @param UpdateUserRequest $request
+     * @param Request $request
      *
      * @return Response
      */
-    public function update($id, UpdateUserRequest $request)
+    public function update($id, Request $request)
     {
-        $user = $this->userRepository->find($id);
+        $validator = Validator::make($request->all(), [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'password' => ['sometimes', 'nullable', 'string', 'min:6', 'confirmed'],
+        ]);
 
-        if (empty($user)) {
-            Flash::error('User not found');
+        if ($validator->fails()) {
+            return redirect()
+                ->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
 
+        $input = $request->all();
+        $updateRequest = $this->put("/users/{$id}", $input);
+        $data = $updateRequest->getData();
+        if (!$data->success) {
+            Flash::error($data->message);
             return redirect(route('users.index'));
         }
-        $input =  $request->all();
-        if (!empty($input['password'])) {
-            $input['password'] = Hash::make($input['password']);
-        } else {
-            unset($input['password']);
-        }
-        $user = $this->userRepository->update($input, $id);
 
-        Flash::success('User updated successfully.');
+        Flash::success($data->message);
 
         return redirect(route('users.index'));
     }
