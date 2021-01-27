@@ -1,5 +1,5 @@
 <div class="table-responsive">
-    <table class="table" id="users-table">
+    <table class="table mb-0" id="users-table">
         <thead>
             <tr>
                 <th style="width: 45%;">Nome</th>
@@ -8,22 +8,34 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($users as $user)
+            @foreach ($users as $_user)
                 <tr>
-                    <td>{!! $user->name !!}</td>
-                    <td>{!! $user->email !!}</td>
+                    <td>{!! $_user->name !!}</td>
+                    <td>{!! $_user->email !!}</td>
                     <td class="text-center">
-                        {!! Form::open(['route' => ['users.destroy', $user->id], 'method' => 'delete']) !!}
+                        {!! Form::open(['route' => ['users.destroy', $_user->id], 'method' => 'delete']) !!}
                         <div class='btn-group'>
-                            <a href="{!!  route('users.show', [$user->id]) !!}"
-                                class='btn btn-default btn-sm'>
+                            <a href="{!!  route('users.show', [$_user->id]) !!}"
+                                class='btn btn-default btn-sm' title="Visualizar">
                                 <i class="fa fa-eye"></i>
                             </a>
-                            <a href="{!!  route('users.edit', [$user->id]) !!}"
-                                class='btn btn-default btn-sm'>
+                            <a href="{!!  route('users.edit', [$_user->id]) !!}"
+                                class='btn btn-default btn-sm' title="Editar">
                                 <i class="fa fa-edit"></i>
                             </a>
-                            {!! Form::button('<i class="fa fa-trash"></i>', ['type' => 'submit', 'class' => 'btn btn-danger btn-sm', 'onclick' => "return confirm('Deseja mesmo excluir?')"]) !!}
+                            @if($user->id !== $_user->id)
+                            <a href="#" class="btn btn-danger btn-sm" disabled>
+                                <i class="fa fa-trash"></i>
+                            </a>
+                            @else
+                            {!! Form::button('<i class="fa fa-trash"></i>', [
+                                'type' => 'submit',
+                                'class' => 'btn btn-danger btn-sm',
+                                'title' => 'Excluir',
+                                'disabled' => 'disabled',
+                                'onclick' => "return confirm('Deseja mesmo excluir?')"
+                            ]) !!}
+                            @endif
                         </div>
                         {!! Form::close() !!}
                     </td>
