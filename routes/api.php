@@ -26,6 +26,8 @@ $api->version('v1', function ($api) {
             $api->post('/logout', 'JWTAuthController@logout')->name('api.auth.logout');
             $api->post('/refresh', 'JWTAuthController@refresh')->name('api.auth.refresh_token');
 
+            $api->get('logs', 'LogAPIController@index')->name('api.logs.index');
+
             $api->get('users', 'UserAPIController@index')->name('api.users.index');
             $api->get('users/{user}', 'UserAPIController@show')->name('api.users.show');
             $api->get('/users/profile', 'JWTAuthController@userProfile')->name('api.users.profile');

@@ -48,6 +48,11 @@ class JWTAuthController extends AppBaseController
             return $this->sendError('E-mail ou senha incorreto.', Response::HTTP_UNAUTHORIZED);
         }
 
+        activity()
+            ->inLog('login')
+            ->causedBy(auth()->user()->id)
+            ->log('Usuário fez login no sistema.');
+
         return $this->createNewToken($jwt_token);
     }
 
@@ -59,7 +64,12 @@ class JWTAuthController extends AppBaseController
     public function logout()
     {
         try {
+            $userId = auth()->user()->id;
             auth()->logout();
+            activity()
+                ->inLog('logout')
+                ->causedBy($userId)
+                ->log('Usuário saiu do sistema.');
             return $this->sendSuccess('Usuário deslogado com sucesso.');
         } catch (JWTException $ex) {
             return $this->sendError('Não foi possível fazer logout.', Response::HTTP_INTERNAL_SERVER_ERROR);

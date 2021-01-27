@@ -27,6 +27,7 @@
         "laravel/tinker": "^2.5",
         "laravel/ui": "3.0",
         "laravelcollective/html": "^6.2",
+        "spatie/laravel-activitylog": "^3.16",
         "spatie/laravel-permission": "^3.18",
         "tymon/jwt-auth": "^1.0",
         "yajra/laravel-datatables": "1.5"
