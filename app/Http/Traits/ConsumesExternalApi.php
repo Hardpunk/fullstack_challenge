@@ -32,7 +32,6 @@ trait ConsumesExternalApi
     private function initialize()
     {
         $this->client = new \GuzzleHttp\Client([
-            // 'base_uri' => $this->baseUri,
             'verify' => false,
             'allow_redirects' => false,
             'headers' => [
@@ -50,7 +49,6 @@ trait ConsumesExternalApi
      * @param array $formParams
      * @param array $queryParams
      * @return JsonResponse
-     * @throws BindingResolutionException
      */
     private function makeRequest($method, $requestUrl, $formParams = [], $queryParams = [])
     {
@@ -89,7 +87,6 @@ trait ConsumesExternalApi
      *
      * @param mixed $response
      * @return JsonResponse
-     * @throws BindingResolutionException
      */
     private function makeResponse($response)
     {
@@ -105,10 +102,7 @@ trait ConsumesExternalApi
      *
      * @param string $url
      * @param array $queryParams
-     * @return App\Http\Traits\json
-     * @throws RuntimeException
-     * @throws BindingResolutionException
-     * @throws GuzzleException
+     * @return JsonResponse
      */
     public function get($url, $queryParams = [])
     {
@@ -121,10 +115,7 @@ trait ConsumesExternalApi
      * @param string $url
      * @param array $formParams
      * @param array $queryParams
-     * @return App\Http\Traits\json
-     * @throws RuntimeException
-     * @throws BindingResolutionException
-     * @throws GuzzleException
+     * @return JsonResponse
      */
     public function post($url, $formParams = [], $queryParams = [])
     {
@@ -137,12 +128,9 @@ trait ConsumesExternalApi
      * @param string $url
      * @param array $formParams
      * @param array $queryParams
-     * @return App\Http\Traits\json
-     * @throws RuntimeException
-     * @throws BindingResolutionException
-     * @throws GuzzleException
+     * @return JsonResponse
      */
-    public function put($url, $formParams, $queryParams = [])
+    public function put($url, $formParams = [], $queryParams = [])
     {
         return $this->makeRequest('PUT', $url, $formParams, $queryParams);
     }
@@ -154,11 +142,8 @@ trait ConsumesExternalApi
      * @param array $formParams
      * @param array $queryParams
      * @return JsonResponse
-     * @throws RuntimeException
-     * @throws BindingResolutionException
-     * @throws GuzzleException
      */
-    public function patch($url, $formParams, $queryParams = [])
+    public function patch($url, $formParams = [], $queryParams = [])
     {
         return $this->makeRequest('PATCH', $url, $formParams, $queryParams);
     }
@@ -170,11 +155,8 @@ trait ConsumesExternalApi
      * @param array $formParams
      * @param array $queryParams
      * @return JsonResponse
-     * @throws RuntimeException
-     * @throws BindingResolutionException
-     * @throws GuzzleException
      */
-    public function delete($url, $formParams, $queryParams = [])
+    public function delete($url, $formParams = [], $queryParams = [])
     {
         return $this->makeRequest('DELETE', $url, $formParams, $queryParams);
     }
@@ -200,21 +182,4 @@ trait ConsumesExternalApi
         return $this->token;
     }
 
-    /**
-     * Refresh token on error exception
-     *
-     * @return void
-     */
-    private function refreshTokenOnError()
-    {
-        $apiRequest = $this->post('/refresh');
-        $data = $apiRequest->getData();
-
-        if ($apiRequest->getStatusCode() == 200) {
-            session([
-                'user' => $data->user,
-                'token' => $data->token,
-            ]);
-        }
-    }
 }

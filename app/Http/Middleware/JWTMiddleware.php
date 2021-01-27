@@ -33,10 +33,10 @@ class JWTMiddleware extends BaseMiddleware
             $apiRequest = $this->post('/refresh');
             $data = $apiRequest->getData();
 
-            if ($apiRequest->getStatusCode() == 200) {
+            if ($apiRequest->getStatusCode() == 200 && $data->success === true) {
                 session([
-                    'user' => $data->user,
-                    'token' => $data->token,
+                    'user' => $data->data->user,
+                    'token' => $data->data->token,
                 ]);
             } else {
                 Flash::error($data->message);
@@ -46,6 +46,7 @@ class JWTMiddleware extends BaseMiddleware
 
         } catch (Throwable $th) {
             Flash::error($th->getMessage());
+            $request->session()->invalidate();
             return redirect(route('login'));
         }
 

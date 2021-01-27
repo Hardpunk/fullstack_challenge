@@ -28,7 +28,6 @@ class UserAPIController extends AppBaseController
     }
 
     /**
-     * @param Request $request
      * @return Response
      *
      * @SWG\Get(
@@ -59,7 +58,7 @@ class UserAPIController extends AppBaseController
      *      )
      * )
      */
-    public function index(Request $request)
+    public function index()
     {
         $users = $this->userRepository->all();
 

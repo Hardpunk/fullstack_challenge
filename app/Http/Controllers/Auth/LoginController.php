@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ConsumesExternalApi;
-use App\Providers\RouteServiceProvider;
 use Flash;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\JsonResponse;
@@ -33,7 +32,7 @@ class LoginController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = RouteServiceProvider::HOME;
+    protected $redirectTo = '/';
 
     /**
      * Create a new controller instance.
@@ -96,36 +95,35 @@ class LoginController extends Controller
      */
     protected function attemptLogin(Request $request)
     {
-        $apiRequest = $this->post('/auth/login', $this->credentials($request));
-        if ($apiRequest->getStatusCode() == 200) {
-            $data = $apiRequest->getData();
-            session([
-                'user' => $data->user,
-                'token' => $data->token,
-            ]);
-            return true;
-        }
+        $response = $this->post('/auth/login', $this->credentials($request));
+        handleResponse($response, 'login');
+        $data = $response->getData();
+        handleResponseData($data, 'login');
 
-        return false;
+        session([
+            'user' => $data->data->user,
+            'token' => $data->data->token,
+        ]);
+
+        return true;
     }
 
     /**
      * Log the user out of the application.
      *
      * @param Request $request
-     * @return RedirectResponse|JsonResponse
+     * @return RedirectResponse
      */
     public function logout(Request $request)
     {
-        $apiRequest = $this->post('/logout');
-        $data = $apiRequest->getData();
-        if ($apiRequest->getStatusCode() == 200) {
-            $request->session()->invalidate();
-            Flash::success($data->message);
-            return redirect(route('index'));
-        }
+        $response = $this->post('/logout');
+        handleResponse($response);
+        $data = $response->getData();
+        handleResponseData($data);
 
-        Flash::error($data->message);
-        return redirect()->back();
+        $request->session()->invalidate();
+        Flash::success($data->message);
+
+        return redirect(route('login'));
     }
 }

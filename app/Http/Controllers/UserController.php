@@ -2,26 +2,30 @@
 
 namespace App\Http\Controllers;
 
-use App\DataTables\UserDataTable;
 use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Requests\CreateUserRequest;
 use App\Http\Traits\ConsumesExternalApi;
-use App\Repositories\UserRepository;
 use Carbon\Carbon;
 use Flash;
-use Hash;
+use Illuminate\Contracts\View\Factory;
+use Illuminate\Contracts\View\View as ViewView;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Routing\Redirector;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 use Response;
+use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Validator;
 
 class UserController extends AppBaseController
 {
     use ConsumesExternalApi;
-
-    /** @var $userRepository UserRepository */
-    private $userRepository;
 
     /** @var object $user */
     private $user;
@@ -31,10 +35,8 @@ class UserController extends AppBaseController
      *
      * @return void
      */
-    public function __construct(UserRepository $userRepo)
+    public function __construct()
     {
-        $this->userRepository = $userRepo;
-
         $this->middleware(function ($request, $next) {
             $this->user = (object) session('user');
             $this->user->created_at = Carbon::parse($this->user->created_at);
@@ -47,22 +49,25 @@ class UserController extends AppBaseController
     /**
      * Display a listing of the User.
      *
-     * @param UserDataTable $userDataTable
-     * @return Response
+     * @return ViewView|Factory
+     * @throws HttpResponseException
      */
-    public function index(UserDataTable $userDataTable)
+    public function index()
     {
         $user = $this->user;
-        $apiRequest = $this->get('/users');
-        $data = $apiRequest->getData();
+        $response = $this->get('/users');
+        handleResponse($response);
+        $data = $response->getData();
+        handleResponseData($data, 'index');
         $users = $data->data;
-        return $userDataTable->render('users.index', compact('user', 'users'));
+
+        return view('users.index', compact('user', 'users'));
     }
 
     /**
      * Show the form for creating a new User.
      *
-     * @return Response
+     * @return ViewView|Factory
      */
     public function create()
     {
@@ -74,16 +79,14 @@ class UserController extends AppBaseController
      * Store a newly created User in storage.
      *
      * @param CreateUserRequest $request
-     *
-     * @return Response
+     * @return Redirector|RedirectResponse
+     * @throws HttpResponseException
      */
     public function store(CreateUserRequest $request)
     {
-        $input = $request->all();
-        $input['password'] = Hash::make($input['password']);
-        $user = $this->userRepository->create($input);
+        $this->saveUser($request);
 
-        Flash::success('User saved successfully.');
+        Flash::success('Usuário cadastrado com sucesso.');
 
         return redirect(route('users.index'));
     }
@@ -92,22 +95,13 @@ class UserController extends AppBaseController
      * Register new User from login form.
      *
      * @param CreateUserRequest $request
-     *
-     * @return Response
+     * @return RedirectResponse|HttpResponse|JsonResponse
+     * @throws HttpResponseException
+     * @throws ValidationException
      */
     public function register(CreateUserRequest $request)
     {
-        $input = $request->all();
-        $response = $this->post('/users', $input);
-        $data = $response->getData();
-
-        if (isset($data->errors)) {
-            $errors = (array) $data->errors;
-            return redirect()
-                ->back()
-                ->withInput()
-                ->withErrors($errors);
-        }
+        $this->saveUser($request);
 
         $loginController = new LoginController();
         return $loginController->login($request);
@@ -117,40 +111,37 @@ class UserController extends AppBaseController
      * Display the specified User.
      *
      * @param int $id
-     *
-     * @return Response
+     * @return ViewView|Factory
+     * @throws HttpResponseException
      */
     public function show($id)
     {
-        $user = $this->userRepository->find($id);
+        $user = $this->user;
+        $response = $this->get("/users/{$id}");
+        handleResponse($response, 'users.index');
+        $data = $response->getData();
+        handleResponseData($data, 'users.index');
+        $showUser = $data->data;
+        $showUser->created_at = Carbon::parse($showUser->created_at);
+        $showUser->updated_at = Carbon::parse($showUser->updated_at);
 
-        if (empty($user)) {
-            Flash::error('User not found');
-
-            return redirect(route('users.index'));
-        }
-
-        return view('users.show')->with('user', $user);
+        return view('users.show', compact('user', 'showUser'));
     }
 
     /**
      * Show the form for editing the specified User.
      *
      * @param int $id
-     *
-     * @return Response
+     * @return ViewView|Factory
+     * @throws HttpResponseException
      */
     public function edit($id)
     {
         $user = $this->user;
-        $apiRequest = $this->get("/users/{$id}");
-        $data = $apiRequest->getData();
-
-        if (!$data->success) {
-            Flash::error($data->message);
-            return redirect(route('users.index'));
-        }
-
+        $response = $this->get("/users/{$id}");
+        handleResponse($response);
+        $data = $response->getData();
+        handleResponseData($data, 'users.index');
         $editUser = $data->data;
 
         return view('users.edit', compact('user', 'editUser'));
@@ -159,10 +150,10 @@ class UserController extends AppBaseController
     /**
      * Update the specified User in storage.
      *
-     * @param  int              $id
+     * @param int $id
      * @param Request $request
-     *
-     * @return Response
+     * @return Redirector|RedirectResponse
+     * @throws HttpResponseException
      */
     public function update($id, Request $request)
     {
@@ -180,12 +171,11 @@ class UserController extends AppBaseController
         }
 
         $input = $request->all();
-        $updateRequest = $this->put("/users/{$id}", $input);
-        $data = $updateRequest->getData();
-        if (!$data->success) {
-            Flash::error($data->message);
-            return redirect(route('users.index'));
-        }
+        $route = 'users.index';
+        $response = $this->put("/users/{$id}", $input);
+        handleResponse($response, $route);
+        $data = $response->getData();
+        handleResponseData($data, $route);
 
         Flash::success($data->message);
 
@@ -196,23 +186,38 @@ class UserController extends AppBaseController
      * Remove the specified User from storage.
      *
      * @param int $id
-     *
-     * @return Response
+     * @return Redirector|RedirectResponse
+     * @throws HttpResponseException
      */
     public function destroy($id)
     {
-        $user = $this->userRepository->find($id);
+        $response = $this->delete("/users/{$id}");
+        $route = 'users.index';
+        handleResponse($response, $route);
+        $data = $response->getData();
+        handleResponseData($data, $route);
 
-        if (empty($user)) {
-            Flash::error('User not found');
-
-            return redirect(route('users.index'));
-        }
-
-        $this->userRepository->delete($id);
-
-        Flash::success('User deleted successfully.');
+        Flash::success($data->message);
 
         return redirect(route('users.index'));
+    }
+
+    /**
+     * Common method to create a new user
+     *
+     * @param Request $request
+     * @return JsonResponse
+     * @throws HttpResponseException
+     */
+    private function saveUser(Request $request)
+    {
+        $input = $request->all();
+        $route = 'users.index';
+        $response = $this->post('/users', $input);
+        handleResponse($response, $route);
+        $data = $response->getData();
+        handleResponseData($data, $route);
+
+        return $response;
     }
 }

@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Validator;
 
-class JWTAuthController extends Controller
+class JWTAuthController extends AppBaseController
 {
     /**
      * Create a new AuthController instance.
@@ -26,7 +27,8 @@ class JWTAuthController extends Controller
     /**
      * Get a JWT via given credentials.
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @param Request $request
+     * @return JsonResponse
      */
     public function login(Request $request)
     {
@@ -36,17 +38,14 @@ class JWTAuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), Response::HTTP_UNPROCESSABLE_ENTITY);
+            return $this->sendError($validator->errors()->first(), Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $jwt_token = null;
         $credentials = $request->only('email', 'password');
 
         if (!($jwt_token = JWTAuth::attempt($credentials))) {
-            return response()->json([
-                'success' => false,
-                'message' => 'E-mail ou senha incorreto.',
-            ], Response::HTTP_UNAUTHORIZED);
+            return $this->sendError('E-mail ou senha incorreto.', Response::HTTP_UNAUTHORIZED);
         }
 
         return $this->createNewToken($jwt_token);
@@ -56,29 +55,21 @@ class JWTAuthController extends Controller
      * Logout user and invalidate token
      *
      * @return JsonResponse
-     * @throws BindingResolutionException
      */
     public function logout()
     {
         try {
             auth()->logout();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Usuário deslogado com sucesso.',
-            ]);
+            return $this->sendSuccess('Usuário deslogado com sucesso.');
         } catch (JWTException $ex) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Não foi possível fazer logout.',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->sendError('Não foi possível fazer logout.', Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
     /**
      * Refresh a token.
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function refresh()
     {
@@ -88,26 +79,27 @@ class JWTAuthController extends Controller
     /**
      * Get the authenticated User.
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function userProfile()
     {
-        return response()->json(auth()->user());
+        return $this->sendResponse(auth()->user(), 'Perfil do usuário');
     }
 
     /**
      * Get the token array structure.
      *
      * @param  string $token
-     *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     protected function createNewToken($token)
     {
-        return response()->json([
+        $arrayResponse = [
             'token' => $token,
             'expires_in' => JWTAuth::factory()->getTTL() * 60,
             'user' => auth()->user(),
-        ]);
+        ];
+
+        return $this->sendResponse($arrayResponse, 'Token criado');
     }
 }
