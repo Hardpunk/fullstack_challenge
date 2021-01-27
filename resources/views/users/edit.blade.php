@@ -13,7 +13,7 @@
 
     <div class="content px-3">
 
-        @include('adminlte-templates::common.errors')
+        @include('flash::message')
 
         <div class="card">
 
@@ -27,7 +27,7 @@
 
             <div class="card-footer">
                 {!! Form::submit('Salvar', ['class' => 'btn btn-primary']) !!}
-                <a href="{{ route('users.index') }}" class="btn btn-default">Cancelar</a>
+                <a href="{{ $user->is_admin ? route('users.index') : route('index') }}" class="btn btn-default">Cancelar</a>
             </div>
 
             {!! Form::close() !!}

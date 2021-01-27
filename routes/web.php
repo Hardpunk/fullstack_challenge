@@ -13,21 +13,29 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login']);
-Route::get('/register', [App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register', [App\Http\Controllers\UserController::class, 'register']);
+Route::group(['namespace' => 'App\\Http\\Controllers'], function () {
+    Route::get('/login', 'Auth\LoginController@showLoginForm')->name('login');
+    Route::post('/login', 'Auth\LoginController@login');
+    Route::get('/register', 'Auth\RegisterController@showRegistrationForm')->name('register');
+    Route::post('/register', 'UserController@register');
+});
 
 Auth::routes([
     'register' => false,
     'verify' => false
 ]);
 
-Route::group(['middleware' => 'jwt.verify'], function () {
-    Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('index');
-    Route::get('/home', [App\Http\Controllers\HomeController::class, 'home'])->name('home');
-    Route::match(['get', 'post'], '/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
-    Route::resource('users', App\Http\Controllers\UserController::class);
+Route::group(['middleware' => 'jwt.verify', 'namespace' => 'App\\Http\\Controllers'], function () {
+    Route::match(['get', 'post'], '/logout', 'Auth\LoginController@logout')->name('logout');
+
+    Route::get('/', 'HomeController@index')->name('index');
+    Route::get('/home', 'HomeController@home')->name('home');
+
+    Route::group(['middleware' => 'role_permission:admin'], function() {
+        Route::resource('users', 'UserController');
+        Route::get('/logs', 'LogController@index')->name('logs.index');
+    });
+
 });
 
 Route::any('/{param}', function () {

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\AppBaseController;
 use Hash;
 use Response;
+use Spatie\Permission\Models\Role;
 use Validator;
 
 /**
@@ -107,7 +108,11 @@ class UserAPIController extends AppBaseController
     {
         $input = $request->all();
         $input['password'] = Hash::make($input['password']);
+        $role = $input['role'] ?? 'client';
+        unset($input['role']);
+
         $user = $this->userRepository->create($input);
+        $user->assignRole(Role::findByName($role));
 
         return $this->sendResponse($user->toArray(), 'Usuário cadastrado com sucesso.');
     }
@@ -154,6 +159,7 @@ class UserAPIController extends AppBaseController
     {
         /** @var User $user */
         $user = $this->userRepository->find($id);
+        $user->roles = $user->getRoleNames()->first();
 
         if (empty($user)) {
             return $this->sendError('Usuário não encontrado.');
@@ -230,8 +236,11 @@ class UserAPIController extends AppBaseController
         }
 
         $input['password'] = Hash::make($input['password']);
+        $role = $input['role'] ?? 'client';
+        unset($input['role']);
 
         $user = $this->userRepository->update($input, $id);
+        $user->syncRoles(Role::findByName($role));
 
         return $this->sendResponse($user->toArray(), 'Usuário atualizado com sucesso.');
     }

@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Response;
+use Spatie\Permission\Models\Role;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Validator;
 
@@ -72,7 +73,12 @@ class UserController extends AppBaseController
     public function create()
     {
         $user = $this->user;
-        return view('users.create', compact('user'));
+        $roles = [];
+        if($user->is_admin) {
+            $roles = Role::all()->pluck('name', 'name');
+        }
+
+        return view('users.create', compact('user', 'roles'));
     }
 
     /**
@@ -144,7 +150,12 @@ class UserController extends AppBaseController
         handleResponseData($data, 'users.index');
         $editUser = $data->data;
 
-        return view('users.edit', compact('user', 'editUser'));
+        $roles = [];
+        if($user->is_admin) {
+            $roles = Role::all()->pluck('name', 'name');
+        }
+
+        return view('users.edit', compact('user', 'editUser', 'roles'));
     }
 
     /**
@@ -170,6 +181,7 @@ class UserController extends AppBaseController
                 ->withInput();
         }
 
+        $user = $this->user;
         $input = $request->all();
         $route = 'users.index';
         $response = $this->put("/users/{$id}", $input);
@@ -178,6 +190,10 @@ class UserController extends AppBaseController
         handleResponseData($data, $route);
 
         Flash::success($data->message);
+
+        if (!$user->is_admin) {
+            return back();
+        }
 
         return redirect(route('users.index'));
     }

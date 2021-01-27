@@ -4,7 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\AppBaseController;
 use App\Http\Controllers\Controller;
-use Illuminate\Contracts\Container\BindingResolutionException;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -94,10 +94,14 @@ class JWTAuthController extends AppBaseController
      */
     protected function createNewToken($token)
     {
+        $user = auth()->user();
+        $userRoles = $user->getRoleNames()->toArray();
         $arrayResponse = [
             'token' => $token,
             'expires_in' => JWTAuth::factory()->getTTL() * 60,
-            'user' => auth()->user(),
+            'user' => $user,
+            'roles' => $userRoles,
+            'is_admin' => in_array('admin', $userRoles),
         ];
 
         return $this->sendResponse($arrayResponse, 'Token criado');

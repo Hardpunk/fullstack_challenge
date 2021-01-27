@@ -6,7 +6,6 @@ use App\Http\Traits\ConsumesExternalApi;
 use Closure;
 use Flash;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 use Tymon\JWTAuth\Http\Middleware\BaseMiddleware;
 
@@ -34,6 +33,9 @@ class JWTMiddleware extends BaseMiddleware
             $data = $apiRequest->getData();
 
             if ($apiRequest->getStatusCode() == 200 && $data->success === true) {
+                $user = $data->data->user;
+                $user->is_admin = $data->data->is_admin;
+                $user->roles = $data->data->roles;
                 session([
                     'user' => $data->data->user,
                     'token' => $data->data->token,

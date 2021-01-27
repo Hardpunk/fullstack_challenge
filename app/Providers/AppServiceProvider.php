@@ -24,6 +24,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        setlocale(LC_ALL, 'pt-BR', 'pt_BR.utf8');
+
         app('Dingo\Api\Auth\Auth')->extend('jwt', function ($app) {
             return new JWT($app['Tymon\JWTAuth\JWTAuth']);
         });

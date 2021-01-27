@@ -23,8 +23,8 @@
                                 class='btn btn-default btn-sm' title="Editar">
                                 <i class="fa fa-edit"></i>
                             </a>
-                            @if($user->id !== $_user->id)
-                            <a href="#" class="btn btn-danger btn-sm" disabled>
+                            @if($user->id === $_user->id)
+                            <a href="#" class="btn btn-danger btn-sm disabled" disabled>
                                 <i class="fa fa-trash"></i>
                             </a>
                             @else
@@ -32,7 +32,7 @@
                                 'type' => 'submit',
                                 'class' => 'btn btn-danger btn-sm',
                                 'title' => 'Excluir',
-                                'disabled' => 'disabled',
+                                'disabled' => false,
                                 'onclick' => "return confirm('Deseja mesmo excluir?')"
                             ]) !!}
                             @endif

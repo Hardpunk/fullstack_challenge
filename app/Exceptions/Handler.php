@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Request;
+use Spatie\Permission\Exceptions\UnauthorizedException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Throwable;
@@ -53,6 +54,13 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $e)
     {
+        if ($e instanceof UnauthorizedException) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Permissão negada.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
         if ($e instanceof UnauthorizedHttpException) {
             $preException = $e->getPrevious();
 
