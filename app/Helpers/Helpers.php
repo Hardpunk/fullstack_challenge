@@ -25,6 +25,7 @@ if (!function_exists('handleResponse')) {
      * Handle API Responses
      *
      * @param ResponseJson $response
+     * @param string $route
      * @return RedirectResponse|void
      */
     function handleResponse($response, $route = 'index')
@@ -38,6 +39,7 @@ if (!function_exists('handleResponse')) {
                 $redirect = $redirect->withInput()->withErrors($errors);
             } else {
                 Flash::error($data->message);
+                $redirect = back()->withInput();
             }
             throw new HttpResponseException($redirect);
         }

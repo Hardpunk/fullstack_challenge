@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use App\Models\User;
+use Illuminate\Foundation\Http\FormRequest;
 
 class CreateUserRequest extends FormRequest
 {
@@ -29,5 +29,15 @@ class CreateUserRequest extends FormRequest
         $rules['password'] = ['required', 'string', 'min:6', 'confirmed'];
 
         return $rules;
+    }
+
+    /**
+     * Force response to be in JSON format
+     *
+     * @return bool
+     */
+    public function expectsJson()
+    {
+        return true;
     }
 }

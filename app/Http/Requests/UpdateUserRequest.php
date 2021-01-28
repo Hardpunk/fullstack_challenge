@@ -30,4 +30,14 @@ class UpdateUserRequest extends FormRequest
 
         return $rules;
     }
+
+    /**
+     * Force response to be in JSON format
+     *
+     * @return bool
+     */
+    public function expectsJson()
+    {
+        return true;
+    }
 }

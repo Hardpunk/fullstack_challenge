@@ -84,13 +84,13 @@ class UserController extends AppBaseController
     /**
      * Store a newly created User in storage.
      *
-     * @param CreateUserRequest $request
+     * @param Request $request
      * @return Redirector|RedirectResponse
      * @throws HttpResponseException
      */
-    public function store(CreateUserRequest $request)
+    public function store(Request $request)
     {
-        $this->saveUser($request);
+        $this->saveUser($request, 'users.create');
 
         Flash::success('Usuário cadastrado com sucesso.');
 
@@ -191,7 +191,7 @@ class UserController extends AppBaseController
 
         Flash::success($data->message);
 
-        if (!$user->is_admin) {
+        if (!$user->is_admin || ($user->is_admin && $user->id == $id && array_key_exists('role', $input) && $input['role'] == 'client')) {
             return back();
         }
 
@@ -222,13 +222,13 @@ class UserController extends AppBaseController
      * Common method to create a new user
      *
      * @param Request $request
+     * @param string $route
      * @return JsonResponse
      * @throws HttpResponseException
      */
-    private function saveUser(Request $request)
+    private function saveUser(Request $request, $route = 'users.index')
     {
         $input = $request->all();
-        $route = 'users.index';
         $response = $this->post('/users', $input);
         handleResponse($response, $route);
         $data = $response->getData();

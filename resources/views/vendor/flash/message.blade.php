@@ -1,3 +1,17 @@
+@if ($errors->any())
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <h5 class="white-text"><strong>ERRO!</strong></h5>
+    <ul>
+        @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+    <button type="button" class="close white-text" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">×</span>
+    </button>
+</div>
+@endif
+
 @foreach (session('flash_notification', collect())->toArray() as $message)
     @if ($message['overlay'])
         @include('flash::modal', [

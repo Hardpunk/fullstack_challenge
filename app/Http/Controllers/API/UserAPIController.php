@@ -235,7 +235,11 @@ class UserAPIController extends AppBaseController
             return $this->sendError('Usuário não encontrado.');
         }
 
-        $input['password'] = Hash::make($input['password']);
+        if (strlen($input['password']) > 0) {
+            $input['password'] = Hash::make($input['password']);
+        } else {
+            unset($input['password']);
+        }
         $role = $input['role'] ?? 'client';
         unset($input['role']);
 

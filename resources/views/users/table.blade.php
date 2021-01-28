@@ -1,9 +1,9 @@
 <div class="table-responsive">
-    <table class="table mb-0" id="users-table">
+    <table class="table mb-0 table-striped table-md" id="users-table">
         <thead>
             <tr>
-                <th style="width: 45%;">Nome</th>
-                <th style="width: 40%;">E-mail</th>
+                <th style="width: 25%;">Nome</th>
+                <th style="width: 60%;">E-mail</th>
                 <th colspan="3" style="width: 15%;">&nbsp;</th>
             </tr>
         </thead>

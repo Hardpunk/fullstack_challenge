@@ -1,6 +1,6 @@
 <div class="table-responsive">
-    <table class="table mb-0" id="users-table">
-        <thead>
+    <table class="table mb-0 table-striped table-bordered table-sm" id="users-table">
+        <thead class="thead-dark">
             <tr>
                 <th class="text-center" style="width: 12%;">Tipo</th>
                 <th class="text-center" style="width: 20%;">Usuário</th>

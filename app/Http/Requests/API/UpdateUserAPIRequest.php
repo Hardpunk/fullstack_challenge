@@ -29,4 +29,14 @@ class UpdateUserAPIRequest extends APIRequest
 
         return $rules;
     }
+
+    /**
+     * Force response to be in JSON format
+     *
+     * @return bool
+     */
+    public function expectsJson()
+    {
+        return true;
+    }
 }
