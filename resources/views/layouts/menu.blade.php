@@ -16,7 +16,7 @@
             <a href="{!! route('users.create') !!}"
                 class="nav-link {{ Request::is('users/create') ? 'active' : '' }}">
                 <i class="{{ Request::is('users/create') ? 'fas' : 'far' }} fa-circle nav-icon"></i>
-                <p>Novo</p>
+                <p>Criar</p>
             </a>
         </li>
     </ul>
@@ -26,7 +26,7 @@
     <a href="{{ route('logs.index') }}"
         class="nav-link {{ Request::is('logs*') ? 'active' : '' }}">
         <i class="nav-icon far fa-list-alt"></i>
-        <p>Logs de atividades</p>
+        <p>Logs de acessos</p>
     </a>
 </li>
 @else

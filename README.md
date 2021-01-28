@@ -18,10 +18,12 @@ Criar uma aplicação em PHP para cadastro de usuários utilizando o padrão de 
  3. Use o servidor WEB http://localhost:8000 para acessar o sistema;
 
 ### Usuários para teste
+
  - **Perfil Admin**
-``E-mail: admin@teste.com``
-``Senha: 123456``
+	- ``E-mail: admin@teste.com``
+	- ``Senha: 123456``
 
  - **Perfil Cliente**
-``E-mail: client@teste.com``
-``Senha: 123456``
+
+	 - ``E-mail: client@teste.com``
+	 - ``Senha: 123456``

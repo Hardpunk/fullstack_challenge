@@ -5,7 +5,7 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1>Logs de atividades</h1>
+                    <h1>Logs de acessos</h1>
                 </div>
             </div>
         </div>
